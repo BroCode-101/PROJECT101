@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block title %}Dataset Display{% endblock %}
+
+{% block content %}
+<div class="card p-4">
+    <h2 class="text-center">Dataset: {{ filename }}</h2>
+    <h4>First 10 rows:</h4>
+    <div class="table-responsive">
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    {% for column in titles %}
+                        <th>{{ column }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in tables[0].split('</tr>')[:-1] %}
+                    <tr>
+                        {% set cells = row.split('</td>')[:-1] %}
+                        {% for cell in cells %}
+                            <td>{{ cell | strip_html }}</td>
+                        {% endfor %}
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <a href="{{ url_for('dataset_stats', filename=request.path.split('/')[-1]) }}" class="btn btn-info mt-3">View Dataset Stats</a>
+</div>
+{% endblock %}

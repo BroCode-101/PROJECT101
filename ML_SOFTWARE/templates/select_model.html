@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Select Model{% endblock %}
+{% block content %}
+<div class="card p-4">
+    <h2 class="text-center">Choose a Model</h2>
+    <form method="POST" class="mt-3">
+        <div class="mb-3">
+            <label for="model" class="form-label">Select Machine Learning Model:</label>
+            <select name="model" id="model" class="form-select" required>
+                <option value="SVM">SVM</option>
+                <option value="Random Forest">Random Forest</option>
+                <option value="Decision Tree">Decision Tree</option>
+                <option value="Gradient Boosting">Gradient Boosting</option>
+                <option value="XGBoost">XGBoost</option>
+                <option value="Logistic Regression">Logistic Regression</option>
+            </select>
+        </div>
+        <button type="submit" class="btn btn-success w-100">Evaluate</button>
+    </form>
+</div>
+{% endblock %}
