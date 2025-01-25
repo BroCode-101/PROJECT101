@@ -1,1 +1,57 @@
-Testing...
+
+-- 1. Creating Tables
+
+-- a) Create 'reservation_table'
+CREATE TABLE reservation_table (
+    login_id NUMBER(50) UNIQUE,
+    unique_id NUMBER(50) UNIQUE,
+    username VARCHAR(50),
+    stage_number NUMBER(10)
+);
+
+-- b) Create 'user_details'
+CREATE TABLE user_details (
+    first_name VARCHAR(50),
+    last_name VARCHAR(50),
+    phone_no NUMBER(10),
+    email VARCHAR(30) UNIQUE
+);
+
+-- 2. Modifying Tables
+
+-- a) Add a new column for 'reservation_percent' to 'reservation_table'
+ALTER TABLE reservation_table ADD reservation_percent DOUBLE;
+
+-- b) Add a new table 'train_details'
+CREATE TABLE train_details (
+    train_id NUMBER(50) UNIQUE,
+    unique_id NUMBER(10),
+    train_name VARCHAR(50),
+    status VARCHAR(3)
+);
+
+-- 3. Adding Constraints
+
+-- a) Add Primary Key constraint to 'user_details'
+ALTER TABLE user_details ADD CONSTRAINT pk_email PRIMARY KEY (email);
+
+-- b) Add Foreign Key constraint to 'train_details'
+ALTER TABLE train_details ADD CONSTRAINT fk_unique_id FOREIGN KEY (unique_id) REFERENCES reservation_table (unique_id);
+
+-- 4. Dropping Columns and Tables
+
+-- a) Drop column 'phone_no' from 'user_details'
+ALTER TABLE user_details DROP COLUMN phone_no;
+
+-- b) Drop table 'train_details'
+DROP TABLE train_details;
+
+-- 5. Renaming Tables and Columns
+
+-- a) Rename 'reservation_table' to 'reservation_details'
+ALTER TABLE reservation_table RENAME TO reservation_details;
+
+-- 6. Truncating Table
+
+-- Truncate 'reservation_details' table
+TRUNCATE TABLE reservation_details;
