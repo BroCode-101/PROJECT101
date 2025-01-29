@@ -1,54 +1,138 @@
-CREATE TABLE reservation_table (
-    login_id NUMBER(50) UNIQUE,
-    unique_id NUMBER(50) UNIQUE,
-    username VARCHAR(50),
-    stage_number NUMBER(10)
-);
+Import necessary libraries
 
-INSERT INTO reservation_table (login_id, unique_id, username, stage_number) 
-VALUES (101, 1001, 'JohnDoe', 1),
-       (102, 1002, 'JaneSmith', 2);
+import pandas as pd
 
-CREATE TABLE user_details (
-    first_name VARCHAR(50),
-    last_name VARCHAR(50),
-    phone_no NUMBER(10),
-    email VARCHAR(30) UNIQUE
-);
+from sklearn.model_selection import train_test_split
 
-INSERT INTO user_details (first_name, last_name, phone_no, email)
-VALUES ('John', 'Doe', 9876543210, 'john.doe@example.com'),
-       ('Jane', 'Smith', 9123456789, 'jane.smith@example.com');
+from sklearn.linear_model import LogisticRegression
 
-ALTER TABLE reservation_table ADD reservation_percent DOUBLE;
+from sklearn.metrics import accuracy_score, confusion_matrix, classification_report, roc_auc_score, roc_curve
 
-UPDATE reservation_table 
-SET reservation_percent = 75.5 
-WHERE unique_id = 1001;
+import matplotlib.pyplot as plt
 
-UPDATE reservation_table 
-SET reservation_percent = 85.3 
-WHERE unique_id = 1002;
+import seaborn as sns
 
-CREATE TABLE train_details (
-    train_id NUMBER(50) UNIQUE,
-    unique_id NUMBER(10),
-    train_name VARCHAR(50),
-    status VARCHAR(3)
-);
 
-INSERT INTO train_details (train_id, unique_id, train_name, status)
-VALUES (1, 1001, 'Express Train', 'ON'),
-       (2, 1002, 'Local Train', 'OFF');
 
-ALTER TABLE user_details ADD CONSTRAINT pk_email PRIMARY KEY (email);
+# Load the dataset
 
-ALTER TABLE train_details ADD CONSTRAINT fk_unique_id FOREIGN KEY (unique_id) REFERENCES reservation_table (unique_id);
+# Replace 'your_dataset.csv' with the actual dataset file name
 
-ALTER TABLE user_details DROP COLUMN phone_no;
+data = pd.read_csv('your_dataset.csv')
 
-DROP TABLE train_details;
 
-ALTER TABLE reservation_table RENAME TO reservation_details;
 
-TRUNCATE TABLE reservation_details;
+# Display the first few rows of the dataset
+
+print("Dataset preview:")
+
+print(data.head())
+
+
+
+# Separate features and target variable
+
+# Replace 'Target' with the actual name of the target column in your dataset
+
+X = data.drop(columns=['Target'])  # Features
+
+y = data['Target']  # Target
+
+
+
+# Split the dataset into training and testing sets
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+
+
+
+# Create a Logistic Regression model
+
+model = LogisticRegression()
+
+
+
+# Train the model
+
+model.fit(X_train, y_train)
+
+
+
+# Predict the target for the test set
+
+y_pred = model.predict(X_test)
+
+
+
+# Evaluate the model
+
+accuracy = accuracy_score(y_test, y_pred)
+
+print(f"Model Accuracy: {accuracy:.2f}")
+
+
+
+# Print the confusion matrix
+
+conf_matrix = confusion_matrix(y_test, y_pred)
+
+print("\nConfusion Matrix:")
+
+print(conf_matrix)
+
+
+
+# Visualize the confusion matrix
+
+plt.figure(figsize=(6, 4))
+
+sns.heatmap(conf_matrix, annot=True, fmt='d', cmap='Blues', xticklabels=['Class 0', 'Class 1'], yticklabels=['Class 0', 'Class 1'])
+
+plt.xlabel('Predicted Label')
+
+plt.ylabel('True Label')
+
+plt.title('Confusion Matrix')
+
+plt.show()
+
+
+
+# Print the classification report
+
+print("\nClassification Report:")
+
+print(classification_report(y_test, y_pred))
+
+
+
+# Calculate ROC AUC
+
+y_pred_prob = model.predict_proba(X_test)[:, 1]
+
+roc_auc = roc_auc_score(y_test, y_pred_prob)
+
+print(f"ROC AUC Score: {roc_auc:.2f}")
+
+
+
+# Plot ROC Curve
+
+fpr, tpr, _ = roc_curve(y_test, y_pred_prob)
+
+plt.plot(fpr, tpr, marker='.', label='Logistic Regression')
+
+plt.plot([0, 1], [0, 1], linestyle='--', label='No Skill')
+
+plt.xlabel('False Positive Rate')
+
+plt.ylabel('True Positive Rate')
+
+plt.title('ROC Curve')
+
+plt.legend()
+
+plt.show()
+
+
+
