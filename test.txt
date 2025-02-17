@@ -1,138 +1,113 @@
-Import necessary libraries
+rogram:
 
-import pandas as pd
+#include <stdio.h>
 
-from sklearn.model_selection import train_test_split
+#include <limits.h> // For INT_MAX
 
-from sklearn.linear_model import LogisticRegression
+#include <stdbool.h> // For boolean values
 
-from sklearn.metrics import accuracy_score, confusion_matrix, classification_report, roc_auc_score, roc_curve
+#define V 6 // Number of vertices
 
-import matplotlib.pyplot as plt
+// Function to find the vertex with minimum distance
 
-import seaborn as sns
+int minDistance(int dist[], bool visited[]) {
 
+int min = INT_MAX, min_index;
 
+for (int v = 0; v < V; v++) {
 
-# Load the dataset
+if (!visited[v] && dist[v] <= min) {
 
-# Replace 'your_dataset.csv' with the actual dataset file name
+min = dist[v];
 
-data = pd.read_csv('your_dataset.csv')
+min_index = v;
 
+}
 
+}
 
-# Display the first few rows of the dataset
+return }
 
-print("Dataset preview:")
+// Function to print the shortest distance and path
 
-print(data.head())
+void printSolution(int dist[]) {
 
+printf("Vertex\tDistance from Source\n");
 
+for (int i = 0; i < V; i++)
 
-# Separate features and target variable
+printf("%d\t%d\n", i, dist[i]);
 
-# Replace 'Target' with the actual name of the target column in your dataset
+}
 
-X = data.drop(columns=['Target'])  # Features
+// Dijkstra's algorithm for OSPF
 
-y = data['Target']  # Target
+void dijkstra(int graph[V][V], int src) {
 
+int dist[V]; // Distance from source to each vertex
 
+bool visited[V]; // To track visited vertices
 
-# Split the dataset into training and testing sets
+// Initialize distances and visited status
 
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+for (int i = 0; i < V; i++) {
 
+dist[i] = INT_MAX;
 
+visited[i] = false;
 
-# Create a Logistic Regression model
+}
 
-model = LogisticRegression()
+// Distance from source to itself is always 0
 
+dist[src] = 0;
 
+// Process all vertices
 
-# Train the model
+for (int count = 0; count < V - 1; count++) {
 
-model.fit(X_train, y_train)
+int u = minDistance(dist, visited); // Get the minimum distance vertex
 
+visited[u] = true; // Mark vertex as processed
 
+// Update distance for neighbors
 
-# Predict the target for the test set
+for (int v = 0; v < V; v++) {
 
-y_pred = model.predict(X_test)
+if (!visited[v] && graph[u][v] && dist[u] != INT_MAX
 
+&& dist[u] + graph[u][v] < dist[v]) {
 
+dist[v] = dist[u] + graph[u][v];
 
-# Evaluate the model
+}
 
-accuracy = accuracy_score(y_test, y_pred)
+}
 
-print(f"Model Accuracy: {accuracy:.2f}")
+}
 
+// Print the result
 
+printSolution(dist);
 
-# Print the confusion matrix
+}
 
-conf_matrix = confusion_matrix(y_test, y_pred)
+// Main function
 
-print("\nConfusion Matrix:")
+int main() {
 
-print(conf_matrix)
+// Graph represented as adjacency matrix
 
+int graph[V][V] = {
 
+{0, 10, 0, 0, 0, 11}, {10, 0, 18, 0, 0, 0}, {0, 18, 0, 6, 0, 0}, {0, 0, 6, 0, 9, 0}, {0, 0, 0, 9, 0, 11, 0, 0, 0, 4, 0}
 
-# Visualize the confusion matrix
+};
 
-plt.figure(figsize=(6, 4))
+int source = 0; // Set source vertex
 
-sns.heatmap(conf_matrix, annot=True, fmt='d', cmap='Blues', xticklabels=['Class 0', 'Class 1'], yticklabels=['Class 0', 'Class 1'])
+// Apply OSPF algorithm
 
-plt.xlabel('Predicted Label')
+dijkstra(graph, source);
 
-plt.ylabel('True Label')
-
-plt.title('Confusion Matrix')
-
-plt.show()
-
-
-
-# Print the classification report
-
-print("\nClassification Report:")
-
-print(classification_report(y_test, y_pred))
-
-
-
-# Calculate ROC AUC
-
-y_pred_prob = model.predict_proba(X_test)[:, 1]
-
-roc_auc = roc_auc_score(y_test, y_pred_prob)
-
-print(f"ROC AUC Score: {roc_auc:.2f}")
-
-
-
-# Plot ROC Curve
-
-fpr, tpr, _ = roc_curve(y_test, y_pred_prob)
-
-plt.plot(fpr, tpr, marker='.', label='Logistic Regression')
-
-plt.plot([0, 1], [0, 1], linestyle='--', label='No Skill')
-
-plt.xlabel('False Positive Rate')
-
-plt.ylabel('True Positive Rate')
-
-plt.title('ROC Curve')
-
-plt.legend()
-
-plt.show()
-
-
-
+r
