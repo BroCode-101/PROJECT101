@@ -2,15 +2,22 @@ import csv
 import random
 import math
 
-# Load CSV file into a dataset
+
 def loadCsv(filename):
     with open(filename, "r") as file:
         lines = csv.reader(file)
         next(lines)  # Skip the header row
-        dataset = [[float(x) for x in row] for row in lines]
+        dataset = []
+        for row in lines:
+            if len(row) == 0:  # Skip empty rows
+                continue
+            try:
+                dataset.append([float(x) for x in row])  # Convert values to float
+            except ValueError:
+                print("Skipping invalid row:", row)  # Debugging message
     return dataset
 
-# Split dataset into training and test sets
+
 def splitDataset(dataset, splitRatio):
     random.seed(42)  # Fix randomness for consistent results
     trainSize = int(len(dataset) * splitRatio)
@@ -21,7 +28,7 @@ def splitDataset(dataset, splitRatio):
         trainSet.append(copy.pop(index))
     return [trainSet, copy]
 
-# Separate dataset by class
+
 def separateByClass(dataset):
     separated = {}
     for vector in dataset:
@@ -31,35 +38,37 @@ def separateByClass(dataset):
         separated[classValue].append(vector)
     return separated
 
-# Calculate mean of a list
+
 def mean(numbers):
     return sum(numbers) / float(len(numbers))
 
-# Calculate standard deviation
+
 def stdev(numbers):
+    if len(numbers) < 2:  # If only one number, return a small default variance
+        return 1e-6  
     avg = mean(numbers)
     variance = sum([pow(x - avg, 2) for x in numbers]) / float(len(numbers) - 1)
-    return math.sqrt(variance) if variance > 0 else 1e-6  # Avoid zero variance
+    return math.sqrt(variance)
 
-# Summarize a dataset
+
 def summarize(dataset):
     summaries = [(mean(attribute), stdev(attribute)) for attribute in zip(*dataset)]
     del summaries[-1]  # Remove the class column summary
     return summaries
 
-# Summarize dataset by class
+
 def summarizeByClass(dataset):
     separated = separateByClass(dataset)
     summaries = {classValue: summarize(instances) for classValue, instances in separated.items()}
     return summaries
 
-# Calculate probability using Gaussian formula
+
 def calculateProbability(x, mean, stdev):
     epsilon = 1e-6  # Prevent division by zero
     exponent = math.exp(-(math.pow(x - mean, 2) / (2 * math.pow(stdev + epsilon, 2))))
     return (1 / (math.sqrt(2 * math.pi) * (stdev + epsilon))) * exponent
 
-# Calculate class probabilities for an input
+
 def calculateClassProbabilities(summaries, inputVector):
     probabilities = {}
     for classValue, classSummaries in summaries.items():
@@ -70,40 +79,46 @@ def calculateClassProbabilities(summaries, inputVector):
             probabilities[classValue] *= calculateProbability(x, mean, stdev)
     return probabilities
 
-# Predict class for an input vector
+
 def predict(summaries, inputVector):
     probabilities = calculateClassProbabilities(summaries, inputVector)
     bestLabel = max(probabilities, key=probabilities.get)
     return bestLabel
 
-# Get predictions for a dataset
+
 def getPredictions(summaries, testSet):
     return [predict(summaries, test) for test in testSet]
 
-# Calculate accuracy of the model
+
 def getAccuracy(testSet, predictions):
     correct = sum(1 for i in range(len(testSet)) if testSet[i][-1] == predictions[i])
     return (correct / float(len(testSet))) * 100.0
 
-# Main function
+
 def main():
-    filename = '5data.csv'
-    splitRatio = 0.67  # 67% training data
+    filename = 'data.csv'  # Ensure this file is in the correct directory
+    splitRatio = 0.67  # 67% training, 33% testing
     dataset = loadCsv(filename)
 
-    # Split the dataset
-    trainingSet, testSet = splitDataset(dataset, splitRatio)
-    print('Split {0} rows into train={1} and test={2} rows'.format(len(dataset), len(trainingSet), len(testSet)))
+    if not dataset:  # Check if dataset is empty
+        print("Error: Dataset is empty or not loaded correctly.")
+        return
 
-    # Summarize the training set
+    trainingSet, testSet = splitDataset(dataset, splitRatio)
+    print(f'Split {len(dataset)} rows into train={len(trainingSet)} and test={len(testSet)} rows')
+
     summaries = summarizeByClass(trainingSet)
 
-    # Test the model
+    # Ensure no class is left with a single sample
+    for classValue, instances in separateByClass(trainingSet).items():
+        if len(instances) < 2:
+            print(f"Warning: Class {classValue} has only {len(instances)} instance(s). Standard deviation may cause issues.")
+
     predictions = getPredictions(summaries, testSet)
 
-    # Calculate accuracy
     accuracy = getAccuracy(testSet, predictions)
-    print('Accuracy of the classifier is: {:.2f}%'.format(accuracy))
+    print(f'Accuracy of the classifier is: {accuracy:.2f}%')
 
-# Run the main function
-main()
+
+if __name__ == "__main__":
+    main()
