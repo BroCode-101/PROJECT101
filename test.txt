@@ -1,113 +1,109 @@
-rogram:
+import csv
+import random
+import math
 
-#include <stdio.h>
+# Load CSV file into a dataset
+def loadCsv(filename):
+    with open(filename, "r") as file:
+        lines = csv.reader(file)
+        next(lines)  # Skip the header row
+        dataset = [[float(x) for x in row] for row in lines]
+    return dataset
 
-#include <limits.h> // For INT_MAX
+# Split dataset into training and test sets
+def splitDataset(dataset, splitRatio):
+    random.seed(42)  # Fix randomness for consistent results
+    trainSize = int(len(dataset) * splitRatio)
+    trainSet = []
+    copy = list(dataset)
+    while len(trainSet) < trainSize:
+        index = random.randrange(len(copy))
+        trainSet.append(copy.pop(index))
+    return [trainSet, copy]
 
-#include <stdbool.h> // For boolean values
+# Separate dataset by class
+def separateByClass(dataset):
+    separated = {}
+    for vector in dataset:
+        classValue = vector[-1]
+        if classValue not in separated:
+            separated[classValue] = []
+        separated[classValue].append(vector)
+    return separated
 
-#define V 6 // Number of vertices
+# Calculate mean of a list
+def mean(numbers):
+    return sum(numbers) / float(len(numbers))
 
-// Function to find the vertex with minimum distance
+# Calculate standard deviation
+def stdev(numbers):
+    avg = mean(numbers)
+    variance = sum([pow(x - avg, 2) for x in numbers]) / float(len(numbers) - 1)
+    return math.sqrt(variance) if variance > 0 else 1e-6  # Avoid zero variance
 
-int minDistance(int dist[], bool visited[]) {
+# Summarize a dataset
+def summarize(dataset):
+    summaries = [(mean(attribute), stdev(attribute)) for attribute in zip(*dataset)]
+    del summaries[-1]  # Remove the class column summary
+    return summaries
 
-int min = INT_MAX, min_index;
+# Summarize dataset by class
+def summarizeByClass(dataset):
+    separated = separateByClass(dataset)
+    summaries = {classValue: summarize(instances) for classValue, instances in separated.items()}
+    return summaries
 
-for (int v = 0; v < V; v++) {
+# Calculate probability using Gaussian formula
+def calculateProbability(x, mean, stdev):
+    epsilon = 1e-6  # Prevent division by zero
+    exponent = math.exp(-(math.pow(x - mean, 2) / (2 * math.pow(stdev + epsilon, 2))))
+    return (1 / (math.sqrt(2 * math.pi) * (stdev + epsilon))) * exponent
 
-if (!visited[v] && dist[v] <= min) {
+# Calculate class probabilities for an input
+def calculateClassProbabilities(summaries, inputVector):
+    probabilities = {}
+    for classValue, classSummaries in summaries.items():
+        probabilities[classValue] = 1
+        for i in range(len(classSummaries)):
+            mean, stdev = classSummaries[i]
+            x = inputVector[i]
+            probabilities[classValue] *= calculateProbability(x, mean, stdev)
+    return probabilities
 
-min = dist[v];
+# Predict class for an input vector
+def predict(summaries, inputVector):
+    probabilities = calculateClassProbabilities(summaries, inputVector)
+    bestLabel = max(probabilities, key=probabilities.get)
+    return bestLabel
 
-min_index = v;
+# Get predictions for a dataset
+def getPredictions(summaries, testSet):
+    return [predict(summaries, test) for test in testSet]
 
-}
+# Calculate accuracy of the model
+def getAccuracy(testSet, predictions):
+    correct = sum(1 for i in range(len(testSet)) if testSet[i][-1] == predictions[i])
+    return (correct / float(len(testSet))) * 100.0
 
-}
+# Main function
+def main():
+    filename = '5data.csv'
+    splitRatio = 0.67  # 67% training data
+    dataset = loadCsv(filename)
 
-return }
+    # Split the dataset
+    trainingSet, testSet = splitDataset(dataset, splitRatio)
+    print('Split {0} rows into train={1} and test={2} rows'.format(len(dataset), len(trainingSet), len(testSet)))
 
-// Function to print the shortest distance and path
+    # Summarize the training set
+    summaries = summarizeByClass(trainingSet)
 
-void printSolution(int dist[]) {
+    # Test the model
+    predictions = getPredictions(summaries, testSet)
 
-printf("Vertex\tDistance from Source\n");
+    # Calculate accuracy
+    accuracy = getAccuracy(testSet, predictions)
+    print('Accuracy of the classifier is: {:.2f}%'.format(accuracy))
 
-for (int i = 0; i < V; i++)
-
-printf("%d\t%d\n", i, dist[i]);
-
-}
-
-// Dijkstra's algorithm for OSPF
-
-void dijkstra(int graph[V][V], int src) {
-
-int dist[V]; // Distance from source to each vertex
-
-bool visited[V]; // To track visited vertices
-
-// Initialize distances and visited status
-
-for (int i = 0; i < V; i++) {
-
-dist[i] = INT_MAX;
-
-visited[i] = false;
-
-}
-
-// Distance from source to itself is always 0
-
-dist[src] = 0;
-
-// Process all vertices
-
-for (int count = 0; count < V - 1; count++) {
-
-int u = minDistance(dist, visited); // Get the minimum distance vertex
-
-visited[u] = true; // Mark vertex as processed
-
-// Update distance for neighbors
-
-for (int v = 0; v < V; v++) {
-
-if (!visited[v] && graph[u][v] && dist[u] != INT_MAX
-
-&& dist[u] + graph[u][v] < dist[v]) {
-
-dist[v] = dist[u] + graph[u][v];
-
-}
-
-}
-
-}
-
-// Print the result
-
-printSolution(dist);
-
-}
-
-// Main function
-
-int main() {
-
-// Graph represented as adjacency matrix
-
-int graph[V][V] = {
-
-{0, 10, 0, 0, 0, 11}, {10, 0, 18, 0, 0, 0}, {0, 18, 0, 6, 0, 0}, {0, 0, 6, 0, 9, 0}, {0, 0, 0, 9, 0, 11, 0, 0, 0, 4, 0}
-
-};
-
-int source = 0; // Set source vertex
-
-// Apply OSPF algorithm
-
-dijkstra(graph, source);
-
-r
+# Run the main function
+main()
